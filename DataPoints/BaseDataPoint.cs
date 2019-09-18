@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Speedometer.DataPoints {
     abstract class BaseDataPoint {
-        private int timeStamp;
+        private int _timeStamp;
+        public int timeStamp { get { return _timeStamp; } set { if (value < 0) _timeStamp = 0; else _timeStamp = value; } }
         private string dataType;
 
         public BaseDataPoint(string dataType, int timeStamp) {
@@ -15,7 +16,7 @@ namespace Speedometer.DataPoints {
         }
 
         public int getTimeStamp() {
-            return this.timeStamp;
+            return this._timeStamp;
         }
 
         public string getDataType() {

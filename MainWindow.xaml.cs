@@ -8,6 +8,7 @@ using Speedometer.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
@@ -104,14 +105,16 @@ namespace Speedometer {
             dataPointReceivedCallback = new ViewModelDataPointReceivedCallback(dataPointReceived);
             mainScreenViewModel = new MainScreenViewModel(" ", dataPointReceivedCallback);
             getAllComPorts();
+
             // FOR TESTING ONLY
-            sendSampleVoltageData();         
+            //  sendSampleVoltageData();         
+
         }
 
-       /// <summary>
-       /// Set the y-axis min and max values for the cartesian live graph
-       /// </summary>
-       /// <param name="now"></param>
+        /// <summary>
+        /// Set the y-axis min and max values for the cartesian live graph
+        /// </summary>
+        /// <param name="now"></param>
         private void SetAxisLimits(DateTime now) {
             AxisMax = now.Ticks + TimeSpan.FromSeconds(1).Ticks; // lets force the axis to be 1 second ahead
             AxisMin = now.Ticks - TimeSpan.FromSeconds(10).Ticks; // and 10 seconds behind
@@ -151,10 +154,11 @@ namespace Speedometer {
         /// Set the Speed Value for the speed gauge
         /// </summary>
         /// <param name="speed"></param>
-        private void setSpeedGaugeValue(int speed) {
-            try {
-                speedGauge.Value = speed;
-            } catch { }
+        private void setSpeedGaugeValue(float speed) {
+            this.Dispatcher.Invoke(() => {
+                Console.WriteLine("Updating speed gauge - " + speed);
+                speedGauge.Value = (int)speed;
+            });
         }
 
         /// <summary>
@@ -190,6 +194,13 @@ namespace Speedometer {
         /// </summary>
         /// <param name="baseDataPoint"></param>
         private void dataPointReceived(BaseDataPoint baseDataPoint) {
+            Console.WriteLine("Main Window - DataPoint received");
+            if(baseDataPoint == null) {
+                Console.WriteLine("NULL!");
+            } else {
+                Console.WriteLine("NOT NULL");
+            }
+
             if (baseDataPoint is SpeedDataPoint) {
                 Console.WriteLine("SpeedDataPoint received by main window");
                 updateSpeedWidgets((SpeedDataPoint)baseDataPoint);
@@ -203,7 +214,9 @@ namespace Speedometer {
         /// </summary>
         /// <param name="speedDataPoint"></param>
         private void updateSpeedWidgets(SpeedDataPoint speedDataPoint) {
-            setSpeedGaugeValue((int)speedDataPoint.getSpeed());
+            Console.WriteLine("Updating Speed Widgets");
+            Console.WriteLine(" Speed - " + speedDataPoint.getSpeed());
+            setSpeedGaugeValue(speedDataPoint.getSpeed());
         }
 
         /// <summary>
@@ -211,30 +224,45 @@ namespace Speedometer {
         /// </summary>
         /// <param name="fuelCellDataPoint"></param>
         private void updateFuelCellWidgets(FuelCellDataPoint fuelCellDataPoint) {
+            Console.WriteLine("Updating Fuel Cell Widgets");
+
+            try {
+                Console.WriteLine("Voltage - " + fuelCellDataPoint.voltage, ", current - " + fuelCellDataPoint.current + ", watt - " + fuelCellDataPoint.watt
+                    + ", energy - " + fuelCellDataPoint.energy + ", temp1 - " + fuelCellDataPoint.temperatures[0] + ", temp2 - " + fuelCellDataPoint.temperatures[1] +
+                    ", temp3 - " + fuelCellDataPoint.temperatures[2] + ", temp4 - " + fuelCellDataPoint.temperatures[3] + ", pressure - " + fuelCellDataPoint.pressure
+                    + ", status - " + fuelCellDataPoint.status);
+            } catch { }
+
             DateTime now = DateTime.Now;
             SetAxisLimits(now);
             updateVoltageValues(fuelCellDataPoint.voltage, now);
             updateCurrentValues(fuelCellDataPoint.current, now);
             updateWattValues(fuelCellDataPoint.watt, now);
-            updateEnergyValues(fuelCellDataPoint.energy, now); 
+            updateEnergyValues(fuelCellDataPoint.energy, now);
+            updateTemperaturesValues(fuelCellDataPoint.temperatures, now);
+            updatePressureValues(fuelCellDataPoint.pressure);
         }
+
         /// <summary>
         ///  Update the voltage cartesian graph
         /// </summary>
         /// <param name="voltageLevel"></param>
         /// <param name="now"></param>
         private void updateVoltageValues(float voltageLevel, DateTime now) {
+            Console.WriteLine("Updating voltage widget");
             VoltageChartValues.Add(new MeasureModel {
                 Value = voltageLevel,
                 DateTime = now
             });
         }
+
         /// <summary>
         /// Update the current cartesian graph
         /// </summary>
         /// <param name="currentLevel"></param>
         /// <param name="now"></param>
-        private void updateCurrentValues(float currentLevel, DateTime now) {           
+        private void updateCurrentValues(float currentLevel, DateTime now) {
+            Console.WriteLine("Updating current widget");
             CurrentChartValues.Add(new MeasureModel {
                 Value = currentLevel,
                 DateTime = now
@@ -246,10 +274,11 @@ namespace Speedometer {
         /// <param name="wattLevel"></param>
         /// <param name="now"></param>
         private void updateWattValues(float wattLevel, DateTime now) {
+            Console.WriteLine("Updating watt widget - " + wattLevel);
             WattChartValues.Add(new MeasureModel {
                 Value = wattLevel,
                 DateTime = now
-            });
+            }); 
         }
         /// <summary>
         ///  Update the energy cartesian graph
@@ -257,6 +286,7 @@ namespace Speedometer {
         /// <param name="energyLevel"></param>
         /// <param name="now"></param>
         private void updateEnergyValues(float energyLevel, DateTime now) {
+            Console.WriteLine("Updating enerty widget");
             EnergyChartValues.Add(new MeasureModel {
                 Value = energyLevel,
                 DateTime = now
@@ -267,7 +297,30 @@ namespace Speedometer {
         /// </summary>
         /// <param name="pressureLevel"></param>
         private void updatePressureValues(float pressureLevel) {
-            this.fuelCellPressureGauge.Value = pressureLevel;
+            Console.WriteLine("Updating pressure widget");
+            this.Dispatcher.Invoke(() => {
+                this.fuelCellPressureGauge.Value = (int)(pressureLevel * 100);
+            });
+        }
+
+        /// <summary>
+        /// Update the 4 temperatures values
+        /// </summary>
+        /// <param name="temperatures"></param>
+        /// <param name="now"></param>
+        private void updateTemperaturesValues(float[] temperatures, DateTime now) {
+            this.Dispatcher.Invoke(() => {
+                this.TemperatureOneTextBlock.Text = temperatures[0].ToString();
+            });
+            this.Dispatcher.Invoke(() => {
+                this.TemperatureTwoTextBlock.Text = temperatures[1].ToString();
+            });
+            this.Dispatcher.Invoke(() => {
+                this.TemperatureThreeTextBlock.Text = temperatures[2].ToString();
+            });
+            this.Dispatcher.Invoke(() => {
+                this.TemperatureFourTextBlock.Text = temperatures[3].ToString();
+            });
         }
 
         /// <summary>
@@ -285,8 +338,7 @@ namespace Speedometer {
             timer.Start();
             timer.Tick += (sender, args) => {
                 timer.Stop();
-                updateFuelCellWidgets(new FuelCellDataPoint(100,randomSpeeds[i], randomSpeeds[i], randomSpeeds[i], randomSpeeds[i]));
-                updatePressureValues(randomSpeeds[i]);
+                updateSpeedWidgets(new SpeedDataPoint(0, randomSpeeds[i]));
                 i += 1;
                 timer.Start();
             };

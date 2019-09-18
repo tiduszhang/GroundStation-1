@@ -13,14 +13,19 @@ namespace Speedometer.DataPoints {
         public float current { get; private set; }
         public float watt { get; private set; }
         public float energy { get; private set; }
+        public float[] temperatures { get; private set; }
+        public float pressure { get; private set; }
+        public string status { get; private set; }
 
-        public FuelCellDataPoint( ushort timeStamp, float voltage, float current, float watt, float energy) : base(FUEL_CELL_DATA_TYPE_KEY, timeStamp) {
+        public FuelCellDataPoint(ushort timeStamp, float voltage, float current, float watt, float energy, 
+            float[] temperatures, float pressure, string status) : base(FUEL_CELL_DATA_TYPE_KEY, timeStamp) {
             this.voltage = voltage;
             this.current = current;
             this.watt = watt;
             this.energy = energy;
+            this.temperatures = temperatures;
+            this.pressure = pressure;
+            this.status = status;
         }
-
-       
     }
 }

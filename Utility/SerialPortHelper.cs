@@ -22,7 +22,11 @@ namespace Speedometer.Utility {
         /// Whenever the port selection is changed, we call the initSerialPort() method
         /// </summary>
         public string portName { get { return _portName; }
-        set { if (value.Length == 0) {
+        set {
+                if(_portName != null) {
+                    closeSerialPort(); // If there was already a serial port opened, we make sure to close it so that only 1 port is ever opened at any one time
+                }
+                if (value.Length == 0) {
                     _portName = " ";
                 } else { _portName = value; }
              initSerialPort(); }
@@ -45,10 +49,7 @@ namespace Speedometer.Utility {
         /// Intialise the Serial Port with the right parameters and the callback method
         /// </summary>
         private void initSerialPort() {
-            // If there was already a serial port opened, we make sure to close it so that only 1 port is ever opened at any one time
-            if(serialPort != null) {
-                closeSerialPort();
-            }
+        
             serialPort = new SerialPort(_portName, BAUD_RATE, PARITY_BIT, NUMBER_OF_DATA_BITS, (StopBits)STOP_BIT);
             serialPort.ReadTimeout = IIME_OUT; // Timeout after 5 seconds
             serialPort.DataReceived += SerialPort_DataReceived; // Pass the com port data received callback method

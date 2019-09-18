@@ -28,7 +28,7 @@ namespace Speedometer.Utility {
         private static SerialPortHelper serialPortHelper;
         private static DataPointReceivedCallback dataPointReceivedCallback;
         private static SerialPortDataReceivedCallBack dataReceivedCallBack;
-        private BaseDataPoint dataPoint;
+
 
         public DataReceiver(string comPortName, DataPointReceivedCallback dataPointReceivedCallback1) {
             // Delegate for callback from SerialPortHelper class -- triggered when data is received from serial port
@@ -45,7 +45,7 @@ namespace Speedometer.Utility {
             }
 
             // Testing DELETE LATER
-            sendSampleSpeedData();
+            // sendSampleSpeedData();
 
         }
 
@@ -56,16 +56,18 @@ namespace Speedometer.Utility {
         /// <param name="dataStr"></param>
         void dataReceived(string dataStr) {
             Console.WriteLine("TAG : String incoming from com port - " + dataStr);
-
+            BaseDataPoint dataPoint;
             if (dataStr.Trim().StartsWith("SM")) {
-                this.dataPoint = DataParser.ParseSpeedometerData(dataStr);
-            } else if (dataStr.Trim().StartsWith("FC")) {
-                this.dataPoint = DataParser.ParseFuelCellData(dataStr);
+                dataPoint = DataParser.ParseSpeedometerData(dataStr);
+            } else if (dataStr.Trim().StartsWith(">>")) {
+                dataPoint = DataParser.ParseFuelCellData(dataStr);
+            } else {
+                dataPoint = null;
             }
 
             // Pass the data point object to the ViewModel using the delegate
             if (dataPointReceivedCallback != null) {
-                dataPointReceivedCallback.Invoke(this.dataPoint);
+                dataPointReceivedCallback.Invoke(dataPoint);
             }
         }
 
@@ -87,3 +89,5 @@ namespace Speedometer.Utility {
         }
     }
 }
+
+

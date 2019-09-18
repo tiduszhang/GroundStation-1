@@ -42,7 +42,6 @@ namespace Speedometer.ViewModel {
             if (viewModelDataPointReceivedCallback == null) {
                 viewModelDataPointReceivedCallback = viewModelDataPointReceivedCallback1;
             }
-
             this.comPortName = comPortName;
 
         }
@@ -53,6 +52,11 @@ namespace Speedometer.ViewModel {
         /// <param name="baseDataPoint"></param>
         private void dataPointReceived(BaseDataPoint baseDataPoint) {
             Console.WriteLine("ViewModel - Data Point received");
+            if(baseDataPoint == null) {
+                Console.WriteLine("ViewModel  - DataPoint is null");
+            } else {
+                Console.WriteLine("ViewModel - DataPoint not null");
+            }
             if(viewModelDataPointReceivedCallback != null) {
                 viewModelDataPointReceivedCallback(baseDataPoint);
             }
