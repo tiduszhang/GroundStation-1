@@ -50,6 +50,13 @@ namespace Speedometer {
         private ObservableValue CurrentValues;
         private ObservableValue WattValues;
         private ObservableValue EnergyValues;
+
+        private static int cartesianItemMaxCount = 10;
+        private static int voltageItemCount = 0;
+        private static int currentItemCount = 0;
+        private static int wattItemCount = 0;
+        private static int energyItemCount = 0;
+
         public ChartValues<MeasureModel> VoltageChartValues { get; set; } // Values of the Voltage Cartesian Chart
         public ChartValues<MeasureModel> CurrentChartValues { get; set; } // Values of the Current Cartesian Chart
         public ChartValues<MeasureModel> WattChartValues { get; set; } // Values of the Watt Cartesian Chart
@@ -104,11 +111,7 @@ namespace Speedometer {
         private void Window_Loaded(object sender, RoutedEventArgs e) {
             dataPointReceivedCallback = new ViewModelDataPointReceivedCallback(dataPointReceived);
             mainScreenViewModel = new MainScreenViewModel(" ", dataPointReceivedCallback);
-            getAllComPorts();
-
-            // FOR TESTING ONLY
-            //  sendSampleVoltageData();         
-
+            getAllComPorts();         
         }
 
         /// <summary>
@@ -162,6 +165,39 @@ namespace Speedometer {
         }
 
         /// <summary>
+        /// Set the fuel cell status indicator background color and text
+        /// </summary>
+        /// <param name="status"></param>
+        private void setFuelCellStatus(string status) {
+            if(status == "IN") {
+                this.Dispatcher.Invoke(() => {
+                    this.statusIndicatorBackground.Background = Brushes.Orange;
+                    this.statusTextBlock.Text = "Initialiating";
+                });
+            } else if(status == "SS") {
+                this.Dispatcher.Invoke(() => {
+                    this.statusIndicatorBackground.Background = Brushes.Yellow;
+                    this.statusTextBlock.Text = "SS";
+                });
+            } else if(status == "OP") {
+                this.Dispatcher.Invoke(() => {  
+                    this.statusIndicatorBackground.Background = Brushes.Green;
+                    this.statusTextBlock.Text = "Operating";
+                });
+            } else if(status == "SD") {
+                this.Dispatcher.Invoke(() => {
+                    this.statusIndicatorBackground.Background = Brushes.DarkRed;
+                    this.statusTextBlock.Text = "Shutting Down";
+                });
+            } else {
+                this.Dispatcher.Invoke(() => {
+                    this.statusIndicatorBackground.Background = Brushes.DarkGray;
+                    this.statusTextBlock.Text = "No status";
+                });
+            }
+        }
+
+        /// <summary>
         /// Callback method for when PortSelectionComboBox item is selected
         /// </summary>
         /// <param name="sender"></param>
@@ -209,6 +245,7 @@ namespace Speedometer {
                 updateFuelCellWidgets((FuelCellDataPoint)baseDataPoint);
             }
         }
+
         /// <summary>
         /// Update all the widgets related to the SpeedDataPoint object
         /// </summary>
@@ -235,6 +272,7 @@ namespace Speedometer {
 
             DateTime now = DateTime.Now;
             SetAxisLimits(now);
+            setFuelCellStatus(fuelCellDataPoint.status);
             updateVoltageValues(fuelCellDataPoint.voltage, now);
             updateCurrentValues(fuelCellDataPoint.current, now);
             updateWattValues(fuelCellDataPoint.watt, now);
@@ -250,10 +288,22 @@ namespace Speedometer {
         /// <param name="now"></param>
         private void updateVoltageValues(float voltageLevel, DateTime now) {
             Console.WriteLine("Updating voltage widget");
-            VoltageChartValues.Add(new MeasureModel {
-                Value = voltageLevel,
-                DateTime = now
+            this.Dispatcher.Invoke(() => {
+
+                if(voltageItemCount > cartesianItemMaxCount) {
+                    VoltageChartValues.Clear();
+                    voltageItemCount = 0;
+                } else {
+                    voltageItemCount += 1;
+                }
+               
+                VoltageChartValues.Add(new MeasureModel {
+                    Value = voltageLevel,
+                    DateTime = now,
+                });
+                this.voltageValueTextBlock.Text = "Voltage : " + voltageLevel;
             });
+         
         }
 
         /// <summary>
@@ -263,11 +313,24 @@ namespace Speedometer {
         /// <param name="now"></param>
         private void updateCurrentValues(float currentLevel, DateTime now) {
             Console.WriteLine("Updating current widget");
-            CurrentChartValues.Add(new MeasureModel {
-                Value = currentLevel,
-                DateTime = now
+            this.Dispatcher.Invoke(() => {
+
+                if(currentItemCount > cartesianItemMaxCount) {
+                    CurrentChartValues.Clear();
+                    currentItemCount = 0;
+                } else {
+                    currentItemCount += 1;
+                }
+
+                CurrentChartValues.Add(new MeasureModel {
+                    Value = currentLevel,
+                    DateTime = now
+                });
+                this.currentValueTextBlock.Text = "Current : " + currentLevel;
             });
+
         }
+
         /// <summary>
         /// Update the watt cartesian graph
         /// </summary>
@@ -275,10 +338,22 @@ namespace Speedometer {
         /// <param name="now"></param>
         private void updateWattValues(float wattLevel, DateTime now) {
             Console.WriteLine("Updating watt widget - " + wattLevel);
-            WattChartValues.Add(new MeasureModel {
-                Value = wattLevel,
-                DateTime = now
-            }); 
+            this.Dispatcher.Invoke(() => {
+
+                if(wattItemCount > cartesianItemMaxCount) {
+                    WattChartValues.Clear();
+                    wattItemCount = 0;
+                } else {
+                    wattItemCount += 1;
+                }
+
+                WattChartValues.Add(new MeasureModel {
+                    Value = wattLevel,
+                    DateTime = now
+                });
+                this.wattValueTextBlock.Text = "Watt : " + wattLevel;
+            });
+         
         }
         /// <summary>
         ///  Update the energy cartesian graph
@@ -287,10 +362,22 @@ namespace Speedometer {
         /// <param name="now"></param>
         private void updateEnergyValues(float energyLevel, DateTime now) {
             Console.WriteLine("Updating enerty widget");
-            EnergyChartValues.Add(new MeasureModel {
-                Value = energyLevel,
-                DateTime = now
+            this.Dispatcher.Invoke(() => {
+
+                if(energyItemCount > cartesianItemMaxCount) {
+                    EnergyChartValues.Clear();
+                    energyItemCount = 0;
+                } else {
+                    energyItemCount += 1;
+                }
+
+                EnergyChartValues.Add(new MeasureModel {
+                    Value = energyLevel,
+                    DateTime = now
+                });
+                this.energyValueTextBlock.Text = "Energy/WattHour : " + energyLevel;
             });
+
         }
         /// <summary>
         /// Update the pressure gauge
@@ -321,27 +408,6 @@ namespace Speedometer {
             this.Dispatcher.Invoke(() => {
                 this.TemperatureFourTextBlock.Text = temperatures[3].ToString();
             });
-        }
-
-        /// <summary>
-        /// JUST FOR TESTING
-        /// </summary>
-        private void sendSampleVoltageData() {
-            float[] randomSpeeds = new float[] {
-                0f,1f,4f,6f,4f,9f,10f,15f,25f,30f,35f,40f,50f,55f,49f,41f,44f,31f,33f,44f,25f,21f,
-                55f,49f,41f,44f,31f,33f,44f,25f,21f,55f,49f,41f,44f,31f,33f,44f,25f,21f
-            };
-
-            int i = 0;
-        
-            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            timer.Start();
-            timer.Tick += (sender, args) => {
-                timer.Stop();
-                updateSpeedWidgets(new SpeedDataPoint(0, randomSpeeds[i]));
-                i += 1;
-                timer.Start();
-            };
         }
     }
 }
