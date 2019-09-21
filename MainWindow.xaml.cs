@@ -51,16 +51,22 @@ namespace Speedometer {
         private ObservableValue WattValues;
         private ObservableValue EnergyValues;
 
-        private static int cartesianItemMaxCount = 10;
-        private static int voltageItemCount = 0;
-        private static int currentItemCount = 0;
-        private static int wattItemCount = 0;
-        private static int energyItemCount = 0;
+        private static int cartesianItemMaxCount = 10; // The maximum number of items shown in the cartesian charts before clearing it -- To prevent stuttering
+        private static int voltageItemCount = 0; // Keep track of the number of data points shown in the voltage chart
+        private static int currentItemCount = 0; // Keep track of the number of data points shown in the current chart
+        private static int wattItemCount = 0; // Keep track of the number of data points shown in the watt chart
+        private static int energyItemCount = 0; // Keep track of the number of data points shown in the energy chart
 
         public ChartValues<MeasureModel> VoltageChartValues { get; set; } // Values of the Voltage Cartesian Chart
         public ChartValues<MeasureModel> CurrentChartValues { get; set; } // Values of the Current Cartesian Chart
         public ChartValues<MeasureModel> WattChartValues { get; set; } // Values of the Watt Cartesian Chart
         public ChartValues<MeasureModel> EnergyChartValues { get; set; } // Values of the Energy Cartesian Chart
+
+        private static float highestSpeed = 0.0f; // The highest speed recorded so far
+        private static float highestTemp1 = 0.0f; // The highest temp1 recorded so far
+        private static float highestTemp2 = 0.0f; // The highest temp2 recorded so far
+        private static float highestTemp3 = 0.0f; // The highest temp3 recorded so far
+        private static float highestTemp4 = 0.0f; // The highest temp4 recorded so far
 
         public Func<double, string> DateTimeFormatter { get; set; }
         public double AxisStep { get; set; }
@@ -72,15 +78,18 @@ namespace Speedometer {
 
             this.DataContext = this; IsReading = true;
             initialDateTime = DateTime.Now;
-
+            Console.WriteLine(initialDateTime.ToString());
             VoltageValues = new ObservableValue(0);
             CurrentValues = new ObservableValue(1);
             WattValues = new ObservableValue(2);
             EnergyValues = new ObservableValue(3);
 
             var mapper = Mappers.Xy<MeasureModel>()
-           .X(model => model.DateTime.Ticks)   //use DateTime.Ticks as X
-           .Y(model => model.Value);           //use the value property as Y
+           .X(model => model.DateTime.Ticks/TimeSpan.FromSeconds(1).Ticks)   //use DateTime.Ticks as X
+           .Y(model => model.Value);                                        //use the value property as Y
+
+            //lets set how to display the X Labels (mm:ss)
+            DateTimeFormatter = value => new DateTime((long)value).ToString("mm:ss");
 
             //lets save the mapper globally.
             Charting.For<MeasureModel>(mapper);
@@ -91,8 +100,7 @@ namespace Speedometer {
             WattChartValues = new ChartValues<MeasureModel>();
             EnergyChartValues = new ChartValues<MeasureModel>();
 
-            //lets set how to display the X Labels
-            DateTimeFormatter = value => new DateTime((long)value).ToString("mm:ss");
+         
 
             //AxisStep forces the distance between each separator in the X axis
             AxisStep = TimeSpan.FromSeconds(1).Ticks;
@@ -110,8 +118,37 @@ namespace Speedometer {
         /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e) {
             dataPointReceivedCallback = new ViewModelDataPointReceivedCallback(dataPointReceived);
-            mainScreenViewModel = new MainScreenViewModel(" ", dataPointReceivedCallback);
-            getAllComPorts();         
+            mainScreenViewModel = new MainScreenViewModel(" ", dataPointReceivedCallback);   
+        }
+
+        /// <summary>
+        /// Callback method for when the comPort selection comboBox is opened
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PortSelectionComboBox_DropDownOpened(object sender, EventArgs e) {
+            getAllComPorts(); // Get all the serial ports on the computer
+        }
+
+        /// <summary>
+        /// Callback method for when the comPort ComboBox is closed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PortSelectionComboBox_DropDownClosed(object sender, EventArgs e) {
+            try {
+                comPortStr = ((ComboBox)sender).SelectedItem.ToString(); // Save the selection
+            } catch { }
+
+            Console.WriteLine("TAG - Port " + comPortStr + " selected");
+
+            if (comPortStr != null && comPortStr.Length != 0) {
+                try {
+                    mainScreenViewModel.comPortName = comPortStr; // Send the new selection to the viewmodel
+                    ((ComboBox)sender).SelectedItem = comPortStr;
+                } catch { }
+             
+            } 
         }
 
         /// <summary>
@@ -120,7 +157,7 @@ namespace Speedometer {
         /// <param name="now"></param>
         private void SetAxisLimits(DateTime now) {
             AxisMax = now.Ticks + TimeSpan.FromSeconds(1).Ticks; // lets force the axis to be 1 second ahead
-            AxisMin = now.Ticks - TimeSpan.FromSeconds(10).Ticks; // and 10 seconds behind
+            AxisMin = now.Ticks - TimeSpan.FromSeconds(8).Ticks; // and 10 seconds behind
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -154,13 +191,22 @@ namespace Speedometer {
         }
 
         /// <summary>
-        /// Set the Speed Value for the speed gauge
+        /// Set the Speed Value for the speed gauge, the max speed & average speed textblock
         /// </summary>
         /// <param name="speed"></param>
-        private void setSpeedGaugeValue(float speed) {
+        private void updateSpeedValues(float speed) {
+            // Update Speed Gauge
             this.Dispatcher.Invoke(() => {
                 Console.WriteLine("Updating speed gauge - " + speed);
                 speedGauge.Value = (int)speed;
+            });
+
+            // Update max speed
+            this.Dispatcher.Invoke(() => {
+                if (speed > highestSpeed) {
+                    highestSpeed = speed;
+                    this.HighestSpeedTextBlock.Text = speed.ToString().Trim();
+                }
             });
         }
 
@@ -171,7 +217,7 @@ namespace Speedometer {
         private void setFuelCellStatus(string status) {
             if(status == "IN") {
                 this.Dispatcher.Invoke(() => {
-                    this.statusIndicatorBackground.Background = Brushes.Orange;
+                    this.statusIndicatorBackground.Background = Brushes.DarkOrange;
                     this.statusTextBlock.Text = "Initialiating";
                 });
             } else if(status == "SS") {
@@ -198,31 +244,25 @@ namespace Speedometer {
         }
 
         /// <summary>
-        /// Callback method for when PortSelectionComboBox item is selected
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void PortSelectionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            comPortStr = ((ComboBox)sender).SelectedItem.ToString();
-            Console.WriteLine("TAG - Port " + comPortStr + " selected");
-            mainScreenViewModel.comPortName = comPortStr;
-        }
-
-        /// <summary>
         /// Get all the COM Ports on the 
         /// </summary>
         private void getAllComPorts() {
+
             this.portSelectionComboBox.Items.Clear();
-            // Get all ports
-            string[] allPorts = SerialPort.GetPortNames();
-            if (allPorts.Length == 0) {
-                this.portSelectionComboBox.Items.Add("No COM Ports");
-            } else {  
-                // Put all the strings into the combobox
-                foreach (string s in allPorts) {
-                    this.portSelectionComboBox.Items.Add(s);
+
+            // Get all ports & display them in the combo box
+            this.Dispatcher.Invoke(() => {
+                string[] allPorts = SerialPort.GetPortNames();
+                if (allPorts.Length == 0) {
+                    this.portSelectionComboBox.Items.Add("No COM Ports");
+                } else {
+                    // Put all the strings into the combobox
+                    foreach (string s in allPorts) {
+                        this.portSelectionComboBox.Items.Add(s);
+                    }
                 }
-            }
+            });
+         
         }
 
         /// <summary>
@@ -253,7 +293,7 @@ namespace Speedometer {
         private void updateSpeedWidgets(SpeedDataPoint speedDataPoint) {
             Console.WriteLine("Updating Speed Widgets");
             Console.WriteLine(" Speed - " + speedDataPoint.getSpeed());
-            setSpeedGaugeValue(speedDataPoint.getSpeed());
+            updateSpeedValues(speedDataPoint.getSpeed());
         }
 
         /// <summary>
@@ -355,6 +395,7 @@ namespace Speedometer {
             });
          
         }
+
         /// <summary>
         ///  Update the energy cartesian graph
         /// </summary>
@@ -377,8 +418,8 @@ namespace Speedometer {
                 });
                 this.energyValueTextBlock.Text = "Energy/WattHour : " + energyLevel;
             });
-
         }
+
         /// <summary>
         /// Update the pressure gauge
         /// </summary>
@@ -396,18 +437,36 @@ namespace Speedometer {
         /// <param name="temperatures"></param>
         /// <param name="now"></param>
         private void updateTemperaturesValues(float[] temperatures, DateTime now) {
+            // Update all 4 temperatures
             this.Dispatcher.Invoke(() => {
                 this.TemperatureOneTextBlock.Text = temperatures[0].ToString();
-            });
-            this.Dispatcher.Invoke(() => {
                 this.TemperatureTwoTextBlock.Text = temperatures[1].ToString();
-            });
-            this.Dispatcher.Invoke(() => {
                 this.TemperatureThreeTextBlock.Text = temperatures[2].ToString();
-            });
-            this.Dispatcher.Invoke(() => {
                 this.TemperatureFourTextBlock.Text = temperatures[3].ToString();
             });
+
+            this.Dispatcher.Invoke(() => {
+                if(temperatures[0] > highestTemp1) {
+                    highestTemp1 = temperatures[0];
+                    this.HighestTemperatureOneTextBlock.Text = temperatures[0].ToString();
+                }
+                if (temperatures[1] > highestTemp2) {
+                    highestTemp2 = temperatures[1];
+                    this.HighestTemperatureTwoTextBlock.Text = temperatures[1].ToString();
+                }
+                if (temperatures[2] > highestTemp3) {
+                    highestTemp3 = temperatures[2];
+                    this.HighestTemperatureThreeTextBlock.Text = temperatures[2].ToString();
+                }
+                if (temperatures[3] > highestTemp4) {
+                    highestTemp4 = temperatures[3];
+                    this.HighestTemperatureFourTextBlock.Text = temperatures[3].ToString();
+                }
+
+            });
+
+            
         }
+
     }
 }
