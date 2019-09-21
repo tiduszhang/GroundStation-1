@@ -80,7 +80,8 @@ namespace Speedometer.Utility {
                 string[] splitStrings = rawString.Split(' ');
 
                 // Get current,
-                try { string temp = splitStrings[1].Trim();
+                try {
+                    string temp = splitStrings[1].Trim();
                     int length = temp.Length;
                     current = float.Parse(temp.Substring(0, length - 1), CultureInfo.InvariantCulture.NumberFormat); // Length - 1 in order to get rid of the 'A' char
                 } catch { }
@@ -101,7 +102,7 @@ namespace Speedometer.Utility {
 
                 // Get the 4 temperatures
                 try {
-                    for(int i = 0; i < 4; i++) {
+                    for (int i = 0; i < 4; i++) {
                         string temp = splitStrings[i + 4].Trim();
                         int length = temp.Length;
                         temperatures[i] = float.Parse(temp.Substring(0, length - 1), CultureInfo.InvariantCulture.NumberFormat); // Length - 1 in order to get rid of the 'C' char
@@ -125,7 +126,7 @@ namespace Speedometer.Utility {
                 try {
                     status = splitStrings[11].Trim();
                 } catch { }
-   
+
             }
 
             FuelCellDataPoint fuelCellDataPoint = new FuelCellDataPoint(0, voltage, current, watt, energy, temperatures, pressure, status);

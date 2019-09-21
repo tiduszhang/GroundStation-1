@@ -45,7 +45,7 @@ namespace Speedometer.Utility {
             }
 
             // Testing DELETE LATER
-            // sendSampleSpeedData();
+           //  sendSampleSpeedData();
 
         }
 
@@ -66,7 +66,7 @@ namespace Speedometer.Utility {
             }
 
             // Pass the data point object to the ViewModel using the delegate
-            if (dataPointReceivedCallback != null) {
+            if (dataPointReceivedCallback != null && dataPoint != null) {
                 dataPointReceivedCallback.Invoke(dataPoint);
             }
         }

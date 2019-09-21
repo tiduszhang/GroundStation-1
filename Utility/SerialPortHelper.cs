@@ -36,7 +36,7 @@ namespace Speedometer.Utility {
         public const int NUMBER_OF_DATA_BITS = 8;
         public const int PARITY_BIT = (int)Parity.None;
         public const int STOP_BIT = (int)StopBits.One;
-        public const int IIME_OUT = 5000;
+        public const int IIME_OUT = 500;
 
         private static SerialPort serialPort;
 
@@ -63,10 +63,17 @@ namespace Speedometer.Utility {
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e) {
+            string dataText;
+
             // Read in the string
-            string dataText = serialPort.ReadLine();
+            try {
+                dataText = serialPort.ReadLine();
+            } catch {
+                dataText = "";
+            }
+        
             // If the delegate is not null, then invoke it and pass the input string
-            if(dataReceivedCallBack != null) {
+            if(dataReceivedCallBack != null && dataText.Length != 0) {
                 dataReceivedCallBack.Invoke(dataText);
             }
         }
