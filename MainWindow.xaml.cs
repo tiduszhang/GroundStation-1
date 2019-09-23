@@ -51,7 +51,7 @@ namespace Speedometer {
         private ObservableValue WattValues;
         private ObservableValue EnergyValues;
 
-        private static int cartesianItemMaxCount = 10; // The maximum number of items shown in the cartesian charts before clearing it -- To prevent stuttering
+        private static int cartesianItemMaxCount = 15; // The maximum number of items shown in the cartesian charts before clearing it -- To prevent stuttering
         private static int voltageItemCount = 0; // Keep track of the number of data points shown in the voltage chart
         private static int currentItemCount = 0; // Keep track of the number of data points shown in the current chart
         private static int wattItemCount = 0; // Keep track of the number of data points shown in the watt chart
@@ -85,7 +85,7 @@ namespace Speedometer {
             EnergyValues = new ObservableValue(3);
 
             var mapper = Mappers.Xy<MeasureModel>()
-           .X(model => model.DateTime.Ticks/TimeSpan.FromSeconds(1).Ticks)   //use DateTime.Ticks as X
+           .X(model => model.DateTime.Ticks/TimeSpan.FromTicks(1).Ticks)   //use DateTime.Ticks as X (Cannot be FromSeconds() else the graph won't show anything!)
            .Y(model => model.Value);                                        //use the value property as Y
 
             //lets set how to display the X Labels (mm:ss)
@@ -99,8 +99,6 @@ namespace Speedometer {
             CurrentChartValues = new ChartValues<MeasureModel>(); // For the current cartesian graph values
             WattChartValues = new ChartValues<MeasureModel>();
             EnergyChartValues = new ChartValues<MeasureModel>();
-
-         
 
             //AxisStep forces the distance between each separator in the X axis
             AxisStep = TimeSpan.FromSeconds(1).Ticks;
@@ -327,7 +325,7 @@ namespace Speedometer {
         /// <param name="voltageLevel"></param>
         /// <param name="now"></param>
         private void updateVoltageValues(float voltageLevel, DateTime now) {
-            Console.WriteLine("Updating voltage widget");
+            Console.WriteLine("Updating voltage widget - Value of voltage is " + voltageLevel);
             this.Dispatcher.Invoke(() => {
 
                 if(voltageItemCount > cartesianItemMaxCount) {
@@ -343,7 +341,6 @@ namespace Speedometer {
                 });
                 this.voltageValueTextBlock.Text = "Voltage : " + voltageLevel;
             });
-         
         }
 
         /// <summary>

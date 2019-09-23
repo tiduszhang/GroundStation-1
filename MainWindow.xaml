@@ -28,7 +28,6 @@
                                DropDownOpened="PortSelectionComboBox_DropDownOpened"
                                DropDownClosed="PortSelectionComboBox_DropDownClosed"/>
                     <!-- Port Selection ComboBox-->
-
                     <!-- Speedometer-->
                     <TextBlock Text="Speed" FontSize="20" Margin="0,20,0,0" HorizontalAlignment="Center"/>
                     <Wpf:Gauge x:Name="speedGauge" LabelsVisibility="Visible" From="0" To="60"
@@ -74,7 +73,7 @@
                         <!--Here we disable tooltips and hovering to get a better performance-->
                         <Wpf:CartesianChart Height="140" MinHeight="100" AnimationsSpeed="0:0:1" Hoverable="False" 
                                             x:Name="voltageGraph" DataTooltip="{x:Null}" >
-             
+ 
                             <Wpf:CartesianChart.Series>
                                 <Wpf:LineSeries Values="{Binding VoltageChartValues}" 
                                 PointGeometry="{x:Null}" 
@@ -95,7 +94,6 @@
                             </Wpf:CartesianChart.AxisX>
                             <Wpf:CartesianChart.AxisY>
                                 <Wpf:Axis MinValue="0">
-                                    
                                 </Wpf:Axis>
                             </Wpf:CartesianChart.AxisY>
                         </Wpf:CartesianChart>
