@@ -28,6 +28,26 @@
                                DropDownOpened="PortSelectionComboBox_DropDownOpened"
                                DropDownClosed="PortSelectionComboBox_DropDownClosed"/>
                     <!-- Port Selection ComboBox-->
+                    
+                    <!-- Save data buttons -->
+                    <TextBlock Grid.Column="0" Text="Save Data : " Margin="0,10,0,0" FontSize="16" FontWeight="Bold" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                      
+                        <Button Margin="0,10,0,0" Click="StartSaveButton_Click" x:Name="startSaveButton" MinWidth="100" Grid.Column="0" Content="Start" Padding="0,10,0,10" HorizontalAlignment="Center"/>
+                        <Button Margin="0,10,0,0" Grid.Column="1" Click="StopSaveButton_Click" x:Name="stopSaveButton"  MinWidth="100" IsEnabled="False"  Content="Stop" Padding="0,10,0,10"  HorizontalAlignment="Center"/>
+                    </Grid>
+                    <!-- Save data buttons -->
+                    
+                    <!-- Save data file name -->
+                    <TextBlock Text="Logging off" x:Name="loggingDataStatusTextBlock" FontSize="16" Margin="0,10,0,0" FontWeight="Bold"/>
+                    <TextBlock Margin="0,0,0,0" MinWidth="100" MinHeight="100" x:Name="loggedDataTextBox" 
+                               Background="LightGray" Padding="5,5,5,5" Foreground="White"/>
+                    <!-- Save data file name -->
+                    
                     <!-- Speedometer-->
                     <TextBlock Text="Speed" FontSize="20" Margin="0,20,0,0" HorizontalAlignment="Center"/>
                     <Wpf:Gauge x:Name="speedGauge" LabelsVisibility="Visible" From="0" To="60"
@@ -69,6 +89,7 @@
 
                     <!-- Voltage Live chart -->
                     <StackPanel Orientation="Vertical" Margin="0,0,0,8">
+                        
                         <TextBlock Text="Voltage" FontSize="16" FontWeight="Bold" x:Name="voltageValueTextBlock"/>
                         <!--Here we disable tooltips and hovering to get a better performance-->
                         <Wpf:CartesianChart Height="140" MinHeight="100" AnimationsSpeed="0:0:1" Hoverable="False" 

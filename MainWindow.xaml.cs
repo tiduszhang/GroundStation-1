@@ -40,11 +40,15 @@ namespace Speedometer {
         private static MainScreenViewModel mainScreenViewModel;
         // Callback method from the ViewModel
         private static ViewModelDataPointReceivedCallback dataPointReceivedCallback;
+        // Data Logger class that saves incoming data into a text file
+        private static DataLogger dataLogger;
 
         private double _axisMax;
         private double _axisMin;
-        // Initial DateTime
-        private static DateTime initialDateTime;
+  
+        // Saving logging data
+        private static string filePath;
+        private static Boolean saveData = false;
 
         private ObservableValue VoltageValues;
         private ObservableValue CurrentValues;
@@ -77,8 +81,7 @@ namespace Speedometer {
             InitializeComponent();
 
             this.DataContext = this; IsReading = true;
-            initialDateTime = DateTime.Now;
-            Console.WriteLine(initialDateTime.ToString());
+      
             VoltageValues = new ObservableValue(0);
             CurrentValues = new ObservableValue(1);
             WattValues = new ObservableValue(2);
@@ -165,6 +168,7 @@ namespace Speedometer {
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
             } 
         }
+
         /// <summary>
         /// CartesianChart x-axis max value
         /// </summary>
@@ -172,7 +176,6 @@ namespace Speedometer {
             get { return _axisMax; }
             set {
                 _axisMax = value;
-
                 OnPropertyChanged("AxisMax");
             }
         }
@@ -269,11 +272,12 @@ namespace Speedometer {
         /// <param name="baseDataPoint"></param>
         private void dataPointReceived(BaseDataPoint baseDataPoint) {
             Console.WriteLine("Main Window - DataPoint received");
-            if(baseDataPoint == null) {
-                Console.WriteLine("NULL!");
-            } else {
-                Console.WriteLine("NOT NULL");
-            }
+
+            this.Dispatcher.Invoke(() => {
+                if (baseDataPoint != null && dataLogger != null) {
+                    dataLogger.logData(baseDataPoint);
+                }
+            });
 
             if (baseDataPoint is SpeedDataPoint) {
                 Console.WriteLine("SpeedDataPoint received by main window");
@@ -461,9 +465,37 @@ namespace Speedometer {
                 }
 
             });
-
-            
         }
 
+        /// <summary>
+        /// Save button clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void StartSaveButton_Click(object sender, RoutedEventArgs e) {
+            saveData = true;
+            dataLogger = new DataLogger(); // Create a new DataLogger Object
+            this.startSaveButton.Content = "Saving ...";
+            this.startSaveButton.IsEnabled = false;
+            this.stopSaveButton.IsEnabled = true;
+            this.loggedDataTextBox.Background = Brushes.DarkGreen;
+            this.loggingDataStatusTextBlock.Text = "Logging Data ... ";
+        }
+
+        /// <summary>
+        /// Stop Save button clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void StopSaveButton_Click(object sender, RoutedEventArgs e) {
+            saveData = false;
+            dataLogger.closeDataLogger();
+            dataLogger = null; // Set data logger object to null
+            this.stopSaveButton.IsEnabled = false;
+            this.startSaveButton.IsEnabled = true;
+            this.startSaveButton.Content = "Save";
+            this.loggedDataTextBox.Background = Brushes.LightGray;
+            this.loggingDataStatusTextBlock.Text = "Logging Off";
+        }
     }
 }
