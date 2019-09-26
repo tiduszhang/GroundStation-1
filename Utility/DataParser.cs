@@ -26,6 +26,7 @@ namespace Speedometer.Utility {
             int timeStamp;
             float speed;
             SpeedDataPoint speedDataPoint;
+            string groundStationTimeStamp = "";
 
             if(rawString != null && rawString.Length != 0) {
                 // Split up the incoming raw string up at the tab character (should get 3 substrings)
@@ -49,11 +50,16 @@ namespace Speedometer.Utility {
 
                 speedDataPoint = new SpeedDataPoint(timeStamp, speed);
 
+                try {
+                    groundStationTimeStamp = DateTime.Now.ToString("dddd, dd MMMM yyyy HH:mm:ss").Trim();
+                } catch { }
+
             } else {
                 speedDataPoint = new SpeedDataPoint(0, 0);
+                speedDataPoint.groundStationTimeStamp = groundStationTimeStamp;
             }
 
-            Console.WriteLine("Parsed SpeedDataPoint object, TimeStamp - " + speedDataPoint.getTimeStamp() + ", Speed - " + speedDataPoint.getSpeed());
+            Console.WriteLine("Parsed SpeedDataPoint object, TimeStamp - " + speedDataPoint.timeStamp + ", Speed - " + speedDataPoint.getSpeed());
 
             return speedDataPoint;
         }
@@ -74,6 +80,7 @@ namespace Speedometer.Utility {
             float pressure = 0f;
             float watt = 0f;
             string status = "No status";
+            string groundStationTimeStamp = "";
 
             if (rawString != null && rawString.Length != 0) {
                 // Split up the incoming raw string up at the space character (should get 15 substrings)
@@ -127,9 +134,14 @@ namespace Speedometer.Utility {
                     status = splitStrings[11].Trim();
                 } catch { }
 
+                try {
+                    groundStationTimeStamp = DateTime.Now.ToString("dddd, dd MMMM yyyy HH:mm:ss").Trim();
+                } catch { }
+
             }
 
             FuelCellDataPoint fuelCellDataPoint = new FuelCellDataPoint(0, voltage, current, watt, energy, temperatures, pressure, status);
+            fuelCellDataPoint.groundStationTimeStamp = groundStationTimeStamp;
             return fuelCellDataPoint;
         }
      
