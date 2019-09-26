@@ -9,13 +9,13 @@ namespace Speedometer.DataPoints {
 
         public static string FUEL_CELL_DATA_TYPE_KEY = "FUEL_CELL_DATA_POINT";
 
-        public float voltage { get; private set; }
-        public float current { get; private set; }
-        public float watt { get; private set; }
-        public float energy { get; private set; }
-        public float[] temperatures { get; private set; }
-        public float pressure { get; private set; }
-        public string status { get; private set; }
+        public float voltage { get; set; }
+        public float current { get; set; }
+        public float watt { get; set; }
+        public float energy { get; set; }
+        public float[] temperatures { get; set; }
+        public float pressure { get; set; }
+        public string status { get; set; }
 
         public FuelCellDataPoint(ushort timeStamp, float voltage, float current, float watt, float energy, 
             float[] temperatures, float pressure, string status) : base(FUEL_CELL_DATA_TYPE_KEY, timeStamp) {

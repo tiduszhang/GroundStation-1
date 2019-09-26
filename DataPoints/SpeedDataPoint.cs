@@ -11,7 +11,7 @@ namespace Speedometer.Model {
         public static string SPEED_DATA_TYPE_KEY = "SPEED_DATA_POINT";
 
         // Speed in Km/h
-        private float speed;
+        public float speed { get; set; }
 
         public SpeedDataPoint(int timeStampMilliSeconds, float speed) : base(SPEED_DATA_TYPE_KEY, timeStampMilliSeconds) {
             this.speed = speed;
@@ -20,6 +20,8 @@ namespace Speedometer.Model {
         public float getSpeed() {
             return this.speed;
         }
+
+       
 
     }
 }
