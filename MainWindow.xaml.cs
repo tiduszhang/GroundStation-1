@@ -47,7 +47,6 @@ namespace Speedometer {
         private double _axisMin;
   
         // Saving logging data
-        private static string filePath;
         private static Boolean saveData = false;
 
         private ObservableValue VoltageValues;
@@ -273,11 +272,12 @@ namespace Speedometer {
         private void dataPointReceived(BaseDataPoint baseDataPoint) {
             Console.WriteLine("Main Window - DataPoint received");
 
-            this.Dispatcher.Invoke(() => {
-                if (baseDataPoint != null && dataLogger != null) {
+            if (baseDataPoint != null && dataLogger != null && saveData == true) {
+                this.Dispatcher.Invoke(() => {
                     dataLogger.logData(baseDataPoint);
-                }
-            });
+                });
+
+            }
 
             if (baseDataPoint is SpeedDataPoint) {
                 Console.WriteLine("SpeedDataPoint received by main window");
